@@ -31,7 +31,7 @@ pub struct TaxTransaction {
     pub customer_details: TaxProductResourceCustomerDetails,
 
     /// The tax collected or refunded, by line item.
-    pub line_items: List<TaxTransactionLineItem>,
+    pub line_items: Option<List<TaxTransactionLineItem>>,
 
     /// Has the value `true` if the object exists in live mode or the value `false` if the object exists in test mode.
     pub livemode: bool,
@@ -39,7 +39,7 @@ pub struct TaxTransaction {
     /// Set of [key-value pairs](https://stripe.com/docs/api/metadata) that you can attach to an object.
     ///
     /// This can be useful for storing additional information about the object in a structured format.
-    pub metadata: Metadata,
+    pub metadata: Option<Metadata>,
 
     /// A custom unique identifier, such as 'myOrder_123'.
     pub reference: String,
@@ -78,18 +78,16 @@ pub struct TaxProductResourceTaxTransactionResourceReversal {
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct TaxProductResourceTaxTransactionShippingCost {
 
-    /// The shipping amount in integer cents.
+    /// The shipping amount in the [smallest currency unit](https://stripe.com/docs/currencies#zero-decimal).
     ///
     /// If `tax_behavior=inclusive`, then this amount includes taxes.
     /// Otherwise, taxes were calculated on top of this amount.
     pub amount: i64,
 
-    /// The amount of tax calculated for shipping, in integer cents.
+    /// The amount of tax calculated for shipping, in the [smallest currency unit](https://stripe.com/docs/currencies#zero-decimal).
     pub amount_tax: i64,
 
     /// The ID of an existing [ShippingRate](https://stripe.com/docs/api/shipping_rates/object).
-    ///
-    /// (It is not populated for the transaction resource object and will be removed in the next API version.).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub shipping_rate: Option<String>,
 
@@ -111,7 +109,7 @@ pub struct TaxProductResourceTaxTransactionShippingCost {
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct TaxProductResourceLineItemTaxBreakdown {
 
-    /// The amount of tax, in integer cents.
+    /// The amount of tax, in the [smallest currency unit](https://stripe.com/docs/currencies#zero-decimal).
     pub amount: i64,
 
     pub jurisdiction: TaxProductResourceJurisdiction,
@@ -129,7 +127,7 @@ pub struct TaxProductResourceLineItemTaxBreakdown {
     /// The possible values for this field may be extended as new tax rules are supported.
     pub taxability_reason: TaxProductResourceLineItemTaxBreakdownTaxabilityReason,
 
-    /// The amount on which tax is calculated, in integer cents.
+    /// The amount on which tax is calculated, in the [smallest currency unit](https://stripe.com/docs/currencies#zero-decimal).
     pub taxable_amount: i64,
 }
 
@@ -306,6 +304,8 @@ impl std::default::Default for TaxProductResourceLineItemTaxBreakdownTaxabilityR
 #[derive(Copy, Clone, Debug, Deserialize, Serialize, Eq, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub enum TaxProductResourceLineItemTaxRateDetailsTaxType {
+    AmusementTax,
+    CommunicationsTax,
     Gst,
     Hst,
     Igst,
@@ -321,6 +321,8 @@ pub enum TaxProductResourceLineItemTaxRateDetailsTaxType {
 impl TaxProductResourceLineItemTaxRateDetailsTaxType {
     pub fn as_str(self) -> &'static str {
         match self {
+            TaxProductResourceLineItemTaxRateDetailsTaxType::AmusementTax => "amusement_tax",
+            TaxProductResourceLineItemTaxRateDetailsTaxType::CommunicationsTax => "communications_tax",
             TaxProductResourceLineItemTaxRateDetailsTaxType::Gst => "gst",
             TaxProductResourceLineItemTaxRateDetailsTaxType::Hst => "hst",
             TaxProductResourceLineItemTaxRateDetailsTaxType::Igst => "igst",
@@ -348,7 +350,7 @@ impl std::fmt::Display for TaxProductResourceLineItemTaxRateDetailsTaxType {
 }
 impl std::default::Default for TaxProductResourceLineItemTaxRateDetailsTaxType {
     fn default() -> Self {
-        Self::Gst
+        Self::AmusementTax
     }
 }
 

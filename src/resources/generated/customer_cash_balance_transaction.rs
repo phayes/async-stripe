@@ -4,7 +4,7 @@
 
 use crate::ids::{CustomerCashBalanceTransactionId};
 use crate::params::{Expandable, Object, Timestamp};
-use crate::resources::{Currency, Customer, PaymentIntent, Refund};
+use crate::resources::{BalanceTransaction, Currency, Customer, PaymentIntent, Refund};
 use serde::{Deserialize, Serialize};
 
 /// The resource representing a Stripe "CustomerCashBalanceTransaction".
@@ -14,6 +14,9 @@ use serde::{Deserialize, Serialize};
 pub struct CustomerCashBalanceTransaction {
     /// Unique identifier for the object.
     pub id: CustomerCashBalanceTransactionId,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub adjusted_for_overdraft: Option<CustomerBalanceResourceCashBalanceTransactionResourceAdjustedForOverdraft>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub applied_to_payment: Option<CustomerBalanceResourceCashBalanceTransactionResourceAppliedToPaymentTransaction>,
@@ -50,9 +53,11 @@ pub struct CustomerCashBalanceTransaction {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub refunded_from_payment: Option<CustomerBalanceResourceCashBalanceTransactionResourceRefundedFromPaymentTransaction>,
 
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub transferred_to_balance: Option<CustomerBalanceResourceCashBalanceTransactionResourceTransferredToBalance>,
+
     /// The type of the cash balance transaction.
     ///
-    /// One of `applied_to_payment`, `unapplied_from_payment`, `refunded_from_payment`, `funded`, `return_initiated`, or `return_canceled`.
     /// New types may be added in future.
     /// See [Customer Balance](https://stripe.com/docs/payments/customer-balance#types) to learn more about these types.
     #[serde(rename = "type")]
@@ -70,6 +75,16 @@ impl Object for CustomerCashBalanceTransaction {
     fn object(&self) -> &'static str {
         "customer_cash_balance_transaction"
     }
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct CustomerBalanceResourceCashBalanceTransactionResourceAdjustedForOverdraft {
+
+    /// The [Balance Transaction](https://stripe.com/docs/api/balance_transactions/object) that corresponds to funds taken out of your Stripe balance.
+    pub balance_transaction: Expandable<BalanceTransaction>,
+
+    /// The [Cash Balance Transaction](https://stripe.com/docs/api/cash_balance_transactions/object) that brought the customer balance negative, triggering the clawback of funds.
+    pub linked_transaction: Expandable<CustomerCashBalanceTransaction>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -168,6 +183,13 @@ pub struct CustomerBalanceResourceCashBalanceTransactionResourceRefundedFromPaym
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct CustomerBalanceResourceCashBalanceTransactionResourceTransferredToBalance {
+
+    /// The [Balance Transaction](https://stripe.com/docs/api/balance_transactions/object) that corresponds to funds transferred to your Stripe balance.
+    pub balance_transaction: Expandable<BalanceTransaction>,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct CustomerBalanceResourceCashBalanceTransactionResourceUnappliedFromPaymentTransaction {
 
     /// The [Payment Intent](https://stripe.com/docs/api/payment_intents/object) that funds were unapplied from.
@@ -254,24 +276,28 @@ impl std::default::Default for CustomerBalanceResourceCashBalanceTransactionReso
 #[derive(Copy, Clone, Debug, Deserialize, Serialize, Eq, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub enum CustomerCashBalanceTransactionType {
+    AdjustedForOverdraft,
     AppliedToPayment,
     Funded,
     FundingReversed,
     RefundedFromPayment,
     ReturnCanceled,
     ReturnInitiated,
+    TransferredToBalance,
     UnappliedFromPayment,
 }
 
 impl CustomerCashBalanceTransactionType {
     pub fn as_str(self) -> &'static str {
         match self {
+            CustomerCashBalanceTransactionType::AdjustedForOverdraft => "adjusted_for_overdraft",
             CustomerCashBalanceTransactionType::AppliedToPayment => "applied_to_payment",
             CustomerCashBalanceTransactionType::Funded => "funded",
             CustomerCashBalanceTransactionType::FundingReversed => "funding_reversed",
             CustomerCashBalanceTransactionType::RefundedFromPayment => "refunded_from_payment",
             CustomerCashBalanceTransactionType::ReturnCanceled => "return_canceled",
             CustomerCashBalanceTransactionType::ReturnInitiated => "return_initiated",
+            CustomerCashBalanceTransactionType::TransferredToBalance => "transferred_to_balance",
             CustomerCashBalanceTransactionType::UnappliedFromPayment => "unapplied_from_payment",
         }
     }
@@ -290,6 +316,6 @@ impl std::fmt::Display for CustomerCashBalanceTransactionType {
 }
 impl std::default::Default for CustomerCashBalanceTransactionType {
     fn default() -> Self {
-        Self::AppliedToPayment
+        Self::AdjustedForOverdraft
     }
 }

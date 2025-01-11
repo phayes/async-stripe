@@ -149,9 +149,10 @@ pub struct IssuingCardShipping {
     /// Recipient name.
     pub name: String,
 
-    /// The phone number of the receiver of the bulk shipment.
+    /// The phone number of the receiver of the shipment.
     ///
-    /// This phone number will be provided to the shipping company, who might use it to contact the receiver in case of delivery issues.
+    /// Our courier partners will use this number to contact you in the event of card delivery issues.
+    /// For individual shipments to the EU/UK, if this field is empty, we will provide them with the phone number provided when the cardholder was initially created.
     pub phone_number: Option<String>,
 
     /// Whether a signature is required for card delivery.
@@ -607,7 +608,6 @@ pub enum IssuingCardSpendingLimitCategories {
     HardwareStores,
     HealthAndBeautySpas,
     HearingAidsSalesAndSupplies,
-    #[serde(rename = "heating_plumbing_a_c")]
     HeatingPlumbingAC,
     HobbyToyAndGameShops,
     HomeSupplyWarehouseStores,
@@ -736,7 +736,6 @@ pub enum IssuingCardSpendingLimitCategories {
     TruckUtilityTrailerRentals,
     TypesettingPlateMakingAndRelatedServices,
     TypewriterStores,
-    #[serde(rename = "u_s_federal_government_agencies_or_departments")]
     USFederalGovernmentAgenciesOrDepartments,
     UniformsCommercialClothing,
     UsedMerchandiseAndSecondhandStores,

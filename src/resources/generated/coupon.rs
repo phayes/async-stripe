@@ -69,8 +69,8 @@ pub struct Coupon {
     /// Set of [key-value pairs](https://stripe.com/docs/api/metadata) that you can attach to an object.
     ///
     /// This can be useful for storing additional information about the object in a structured format.
-    #[serde(default)]
-    pub metadata: Metadata,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub metadata: Option<Metadata>,
 
     /// Name of the coupon displayed to customers on for instance invoices or receipts.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -78,7 +78,7 @@ pub struct Coupon {
 
     /// Percent that will be taken off the subtotal of any invoices for this customer for the duration of the coupon.
     ///
-    /// For example, a coupon with percent_off of 50 will make a %s100 invoice %s50 instead.
+    /// For example, a coupon with percent_off of 50 will make a $ (or local equivalent)100 invoice $ (or local equivalent)50 instead.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub percent_off: Option<f64>,
 
@@ -98,7 +98,7 @@ pub struct Coupon {
 impl Coupon {
     /// Returns a list of your coupons.
     pub fn list(client: &Client, params: &ListCoupons<'_>) -> Response<List<Coupon>> {
-        client.get_query("/coupons", &params)
+        client.get_query("/coupons", params)
     }
 
     /// You can create coupons easily via the [coupon management](https://dashboard.stripe.com/coupons) page of the Stripe dashboard.
@@ -107,18 +107,20 @@ impl Coupon {
     /// If you set an `amount_off`, that amount will be subtracted from any invoice’s subtotal.
     /// For example, an invoice with a subtotal of $100 will have a final total of $0 if a coupon with an `amount_off` of 20000 is applied to it and an invoice with a subtotal of $300 will have a final total of $100 if a coupon with an `amount_off` of 20000 is applied to it.
     pub fn create(client: &Client, params: CreateCoupon<'_>) -> Response<Coupon> {
+        #[allow(clippy::needless_borrows_for_generic_args)]
         client.post_form("/coupons", &params)
     }
 
     /// Retrieves the coupon with the given ID.
     pub fn retrieve(client: &Client, id: &CouponId, expand: &[&str]) -> Response<Coupon> {
-        client.get_query(&format!("/coupons/{}", id), &Expand { expand })
+        client.get_query(&format!("/coupons/{}", id), Expand { expand })
     }
 
     /// Updates the metadata of a coupon.
     ///
     /// Other coupon details (currency, duration, amount_off) are, by design, not editable.
     pub fn update(client: &Client, id: &CouponId, params: UpdateCoupon<'_>) -> Response<Coupon> {
+        #[allow(clippy::needless_borrows_for_generic_args)]
         client.post_form(&format!("/coupons/{}", id), &params)
     }
 
